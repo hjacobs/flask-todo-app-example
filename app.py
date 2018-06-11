@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
-from flask import Flask, redirect, url_for, render_template
+import redis
+from flask import Flask, redirect, url_for, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 from flask_dance.contrib.github import make_github_blueprint, github
 
@@ -14,14 +15,43 @@ blueprint = make_github_blueprint(
 )
 app.register_blueprint(blueprint, url_prefix="/login")
 
+r = redis.StrictRedis(host="localhost", port=6379, db=0)
+
 
 @app.route("/")
-def hello():
+def index():
     if not github.authorized:
         return redirect(url_for("github.login"))
     resp = github.get("/user")
     assert resp.ok
-    return render_template("index.html", login=resp.json()["login"])
+    login = resp.json()["login"]
+    items = r.lrange("todo:{}:items".format(login), 0, -1)
+    return render_template("index.html", login=login, items=items)
+
+
+@app.route("/add", methods=["POST"])
+def add():
+    if not github.authorized:
+        return redirect(url_for("github.login"))
+    resp = github.get("/user")
+    assert resp.ok
+    login = resp.json()["login"]
+    text = request.form["text"]
+    print("Adding as to-do for {}: {}".format(login, text))
+    r.rpush("todo:{}:items".format(login), text)
+    return redirect("/")
+
+
+@app.route("/delete/<int:id>", methods=["POST"])
+def delete(id):
+    if not github.authorized:
+        return redirect(url_for("github.login"))
+    resp = github.get("/user")
+    assert resp.ok
+    login = resp.json()["login"]
+    r.lset("todo:{}:items".format(login), id, "DELETED")
+    r.lrem("todo:{}:items".format(login), 0, "DELETED")
+    return redirect("/")
 
 
 if __name__ == "__main__":

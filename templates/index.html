@@ -12,6 +12,31 @@
     <div class="container">
         <h1 class="title">ToDo List</h1>
         {{ login }}
+
+
+        {% for item in items: %}
+        <form method="post" action="/delete/{{ loop.index0 }}">
+            <div class="columns">
+                <div class="column">
+        {{ item }}
+                </div>
+                <div class="column">
+                    <button type="submit" class="button is-danger">Delete</button>
+                </div>
+        </div>
+        </form>
+        {% endfor %}
+
+        <form method="post" action="/add">
+            <div class="columns">
+                <div class="column">
+                <input type="text" class="input is-primary" placeholder="New to-do item" name="text">
+                </div>
+                <div class="column">
+            <button type="submit" class="button is-primary">Add</button>
+                </div>
+            </div>
+        </form>
     </div>
     </section>
   <footer class="footer">
