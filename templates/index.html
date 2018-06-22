@@ -3,33 +3,43 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ToDo List</title>
+    <title>To-Do List</title>
+     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.png') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.0.7/js/all.js"></script>
   </head>
   <body>
     <section class="section">
     <div class="container">
-        <h1 class="title">ToDo List</h1>
-        {{ login }}
-
+        <h1 class="title">To-Do List of {{ login }}</h1>
 
         {% for item in items: %}
-        <form method="post" action="/delete/{{ loop.index0 }}">
             <div class="columns">
-                <div class="column">
-        {{ item }}
+                <div class="column {{ 'has-text-success' if item.done }} is-four-fifths">
+                    {{ item.text }}
                 </div>
                 <div class="column">
-                    <button type="submit" class="button is-danger">Delete</button>
+                    {% if not item.done: %}
+                    <form method="post" action="/done/{{ loop.index0 }}">
+                        <button type="submit" class="button is-success">Mark Done</button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="column">
+                    <form method="post" action="/delete/{{ loop.index0 }}">
+                        <button type="submit" class="button is-danger">Delete</button>
+                    </form>
                 </div>
         </div>
-        </form>
+        {% else %}
+        <p class="content">Great, no to-do items, please add some!</p>
         {% endfor %}
+
+        <progress class="progress is-primary" value="{{ items_done }}" max="{{ items|count }}"></progress>
 
         <form method="post" action="/add">
             <div class="columns">
-                <div class="column">
+                <div class="column is-four-fifths">
                 <input type="text" class="input is-primary" placeholder="New to-do item" name="text">
                 </div>
                 <div class="column">
@@ -42,7 +52,7 @@
   <footer class="footer">
       <div class="container">
           <div class="content has-text-centered">
-              <p><a href="https://github.com/hjacobs/flask-todo-app-example">Flask ToDo App Example</a> {{ version }}</p>
+              <p><a href="https://github.com/hjacobs/flask-todo-app-example">Flask To-Do App Example</a></p>
           </div>
       </div>
   </footer>
